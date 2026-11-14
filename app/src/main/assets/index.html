@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>Calculatrice</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at top,#26344b,#0b1020 65%);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#f8fafc}
+.calculator{width:min(100%,360px);padding:22px;border:1px solid #ffffff20;border-radius:28px;background:#111827eF;box-shadow:0 24px 70px #0008}
+h1{font-size:18px;font-weight:650;margin:0 0 18px;color:#cbd5e1;letter-spacing:.3px}
+.screen{min-height:112px;padding:18px 14px;margin-bottom:16px;border-radius:18px;background:#080d18;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;overflow:hidden}
+#previous{min-height:22px;color:#94a3b8;font-size:14px;overflow-wrap:anywhere}
+#display{width:100%;text-align:right;font-size:clamp(30px,9vw,42px);font-weight:600;overflow-wrap:anywhere}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+button{height:64px;border:0;border-radius:17px;background:#263247;color:#f8fafc;font-size:22px;font-weight:600;cursor:pointer;transition:filter .15s,transform .08s}
+button:active{transform:scale(.96);filter:brightness(1.2)}
+button:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+.utility{background:#3b4659;color:#e2e8f0}.operator{background:#245b91}
+.equals{background:#16a085;grid-row:span 2;height:auto}.zero{grid-column:span 2}
+.hint{text-align:center;color:#94a3b8;font-size:12px;margin:16px 0 0}
+</style>
+</head>
+<body>
+<main class="calculator" aria-label="Calculatrice">
+<h1>CALCULATRICE</h1>
+<section class="screen" aria-live="polite"><div id="previous"></div><div id="display">0</div></section>
+<section class="keys">
+<button class="utility" data-action="clear">AC</button><button class="utility" data-action="delete">⌫</button><button class="utility" data-action="sign">±</button><button class="operator" data-value="÷">÷</button>
+<button data-value="7">7</button><button data-value="8">8</button><button data-value="9">9</button><button class="operator" data-value="×">×</button>
+<button data-value="4">4</button><button data-value="5">5</button><button data-value="6">6</button><button class="operator" data-value="−">−</button>
+<button data-value="1">1</button><button data-value="2">2</button><button data-value="3">3</button><button class="operator" data-value="+">+</button>
+<button class="zero" data-value="0">0</button><button data-value=".">.</button><button class="equals" data-action="equals">=</button>
+</section><p class="hint">Fonctionne aussi avec le clavier</p>
+</main>
+<script>
+(() => {
+const display=document.querySelector('#display'),previous=document.querySelector('#previous');
+let current='0',stored=null,operator=null,fresh=false;
+const render=()=>{display.textContent=current};
+const format=n=>Number.isFinite(n)?String(Number.parseFloat(n.toPrecision(12))):'Erreur';
+function input(value){if(current==='Erreur'||fresh){current=value==='.'?'0.':value;fresh=false}else if(value==='.'){if(!current.includes('.'))current+='.'}else current=current==='0'?value:current+value;render()}
+function calculate(){if(stored===null||!operator)return;const a=Number(stored),b=Number(current);let result;switch(operator){case '+':result=a+b;break;case '−':result=a-b;break;case '×':result=a*b;break;case '÷':result=b===0?NaN:a/b;break}previous.textContent=stored+' '+operator+' '+current+' =';current=format(result);stored=null;operator=null;fresh=true;render()}
+function chooseOperator(op){if(current==='Erreur')return;if(operator&&!fresh)calculate();stored=current;operator=op;previous.textContent=current+' '+op;fresh=true}
+function clear(){current='0';stored=null;operator=null;fresh=false;previous.textContent='';render()}
+function action(name){if(name==='clear')clear();if(name==='delete'){if(!fresh)current=current.length>1?current.slice(0,-1):'0';render()}if(name==='sign'&&current!=='0'&&current!=='Erreur'){current=current.startsWith('-')?current.slice(1):'-'+current;render()}if(name==='equals')calculate()}
+document.querySelector('.keys').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.value)['+','−','×','÷'].includes(b.dataset.value)?chooseOperator(b.dataset.value):input(b.dataset.value);else action(b.dataset.action)});
+document.addEventListener('keydown',e=>{if(/^[0-9.]$/.test(e.key))input(e.key);else if(e.key==='+')chooseOperator('+');else if(e.key==='-')chooseOperator('−');else if(e.key==='*')chooseOperator('×');else if(e.key==='/'){e.preventDefault();chooseOperator('÷')}else if(e.key==='Enter'||e.key==='=')calculate();else if(e.key==='Backspace')action('delete');else if(e.key==='Escape')clear()});
+render();
+})();
+</script>
+</body></html>
